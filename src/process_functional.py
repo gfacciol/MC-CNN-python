@@ -19,8 +19,8 @@ def compute_features(left_image, right_image, patch_height, patch_width, checkpo
     # pad images to make the final feature map size = (height, width..)
     auged_left_image = np.zeros([1, height+patch_height-1, width+patch_width-1, 1], dtype=np.float32)
     auged_right_image = np.zeros([1, height+patch_height-1, width+patch_width-1, 1], dtype=np.float32)
-    row_start = (patch_height - 1)/2
-    col_start = (patch_width - 1)/2
+    row_start = (patch_height - 1)//2
+    col_start = (patch_width - 1)//2
     auged_left_image[0, row_start: row_start+height, col_start: col_start+width] = left_image
     auged_right_image[0, row_start: row_start+height, col_start: col_start+width] = right_image
 
@@ -39,10 +39,10 @@ def compute_features(left_image, right_image, patch_height, patch_width, checkpo
                         allow_soft_placement=True, \
                         gpu_options=tf.GPUOptions(allow_growth=True))) as sess:
 
-        print "{}: restoring from {}...".format(datetime.now(), checkpoint)
+        print("{}: restoring from {}...".format(datetime.now(), checkpoint))
         saver.restore(sess, checkpoint)
 
-        print "{}: features computing...".format(datetime.now())
+        print("{}: features computing...".format(datetime.now()))
         '''
         # this is used when a whole image is too big to fit in the memory
         featureslul = sess.run(features, feed_dict = {x: auged_left_image[:, 0: height/2+patch_height-1, 0: width/2+patch_width-1]}) 
@@ -61,11 +61,11 @@ def compute_features(left_image, right_image, patch_height, patch_width, checkpo
 
         featuresl = sess.run(features, feed_dict = {x: auged_left_image}) 
         featuresr = sess.run(features, feed_dict = {x: auged_right_image}) 
-        print featuresl.shape
+        print(featuresl.shape)
 
         featuresl = np.squeeze(featuresl, axis=0)
         featuresr = np.squeeze(featuresr, axis=0) # (height, width, 64)
-        print "{}: features computed done...".format(datetime.now())
+        print("{}: features computed done...".format(datetime.now()))
 
     # clear the used gpu memory
     tf.reset_default_graph()
@@ -77,7 +77,7 @@ def compute_features(left_image, right_image, patch_height, patch_width, checkpo
 # cost_volume[d, x, y] = -correlation between pixel (x, y) in left image and pixel (x, y - d) in right image
 def compute_cost_volume(featuresl, featuresr, ndisp):
 
-    print "{}: computing cost_volume for left image...".format(datetime.now())
+    print("{}: computing cost_volume for left image...".format(datetime.now()))
     height, width = featuresl.shape[:2]
     left_cost_volume = np.zeros([ndisp, height, width], dtype=np.float32)
 
@@ -85,7 +85,7 @@ def compute_cost_volume(featuresl, featuresr, ndisp):
     tem_xl = featuresl
     tem_xr = featuresr
     for d in range(ndisp):
-        print "{}: disparity {}...".format(datetime.now(), d)
+        print("{}: disparity {}...".format(datetime.now(), d))
         left_cost_volume[d, :, d:] = np.sum(np.multiply(tem_xl, tem_xr), axis=-1)
         tem_xl = tem_xl[:, 1:]
         tem_xr = tem_xr[:, :tem_xr.shape[1]-1]
@@ -94,17 +94,17 @@ def compute_cost_volume(featuresl, featuresr, ndisp):
     for d in range(ndisp-1, 0, -1):
         left_cost_volume[d:ndisp, :, d-1] = np.mean(left_cost_volume[d:ndisp, :, d:d+3], axis=-1)
 
-    print "{}: cost_volume for left image computed...".format(datetime.now())
+    print("{}: cost_volume for left image computed...".format(datetime.now()))
 
     # do it for right image again
     # NOTE: just copy from left_cost_volume since dot product is symmetric
-    print "{}: computing cost_volume for right image...".format(datetime.now())
+    print("{}: computing cost_volume for right image...".format(datetime.now()))
     right_cost_volume = np.zeros([ndisp, height, width], dtype=np.float32)
     for d in range(ndisp):
         right_cost_volume[d, :, :width-d] = left_cost_volume[d, :, d:]
     for d in range(ndisp-1, 0, -1):
         right_cost_volume[d:ndisp, :, width-d] = np.mean(right_cost_volume[d:ndisp, :, width-d-3:width-d], axis=-1)
-    print "{}: cost_volume for right image computed...".format(datetime.now())
+    print("{}: cost_volume for right image computed...".format(datetime.now()))
 
     # convert from matching score to cost
     # match score larger = cost smaller
@@ -145,9 +145,9 @@ def cost_volume_aggregation(left_image, right_image, left_cost_volume, right_cos
 
     # then compute average match cost using union regions
     # NOTE: the averaging can be done several times
-    print "{}: cost averaging for left cost_volume...".format(datetime.now())
+    print("{}: cost averaging for left cost_volume...".format(datetime.now()))
     for _ in range(max_average_time):
-        print "\t{}: averaging No.{} time".format(datetime.now(), _)
+        print("\t{}: averaging No.{} time".format(datetime.now(), _))
 
         agg_cost_volume = np.ndarray(left_cost_volume.shape, dtype=np.float32)
         for h in range(height):
@@ -162,9 +162,9 @@ def cost_volume_aggregation(left_image, right_image, left_cost_volume, right_cos
 
         left_cost_volume = agg_cost_volume
 
-    print "{}: cost averaging for right cost_volume...".format(datetime.now())
+    print("{}: cost averaging for right cost_volume...".format(datetime.now()))
     for _ in range(max_average_time):
-        print "\t{}: averaging No.{} time".format(datetime.now(), _)
+        print("\t{}: averaging No.{} time".format(datetime.now(), _))
 
         agg_cost_volume = np.ndarray(right_cost_volume.shape, dtype=np.float32)
         for h in range(height):
@@ -179,7 +179,7 @@ def cost_volume_aggregation(left_image, right_image, left_cost_volume, right_cos
 
         right_cost_volume = agg_cost_volume
 
-    print "{}: cost average done...".format(datetime.now())
+    print("{}: cost average done...".format(datetime.now()))
     return left_cost_volume, right_cost_volume
 
 # semi-global matching for four directions and taking average
@@ -188,49 +188,49 @@ def SGM_average(left_cost_volume, right_cost_volume, left_image, right_image, \
                 sgm_P1, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, sgm_V):
 
     # along four directions do dynamic programming and take average
-    print "{}: semi-global matching for left image...".format(datetime.now())
+    print("{}: semi-global matching for left image...".format(datetime.now()))
     # right
-    print "{}: right".format(datetime.now())
+    print("{}: right".format(datetime.now()))
     r = (0, 1)
     left_cost_volume_right = semi_global_matching(left_image, right_image, left_cost_volume, r, sgm_P1, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, "L")
     # left
-    print "{}: left".format(datetime.now())
+    print("{}: left".format(datetime.now()))
     r = (0, -1)
     left_cost_volume_left = semi_global_matching(left_image, right_image, left_cost_volume, r, sgm_P1, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, "L")
     # for two vertical directions, P1 should be further devided by sgm_V
     # up
-    print "{}: up".format(datetime.now())
+    print("{}: up".format(datetime.now()))
     r = (-1, 0)
     left_cost_volume_up = semi_global_matching(left_image, right_image, left_cost_volume, r, sgm_P1/sgm_V, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, "L")
     # bottom
-    print "{}: bottom".format(datetime.now())
+    print("{}: bottom".format(datetime.now()))
     r = (1, 0)
     left_cost_volume_bottom = semi_global_matching(left_image, right_image, left_cost_volume, r, sgm_P1/sgm_V, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, "L")
     # taken average
     left_cost_volume = (left_cost_volume_right + left_cost_volume_left + left_cost_volume_up + left_cost_volume_bottom) / 4.
 
     # doing the same for right cost volume
-    print "{}: semi-global matching for right image...".format(datetime.now())
+    print("{}: semi-global matching for right image...".format(datetime.now()))
     # right
-    print "{}: right".format(datetime.now())
+    print("{}: right".format(datetime.now()))
     r = (0, 1)
     right_cost_volume_right = semi_global_matching(left_image, right_image, right_cost_volume, r, sgm_P1, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, "R")
     # left
-    print "{}: left".format(datetime.now())
+    print("{}: left".format(datetime.now()))
     r = (0, -1)
     right_cost_volume_left = semi_global_matching(left_image, right_image, right_cost_volume, r, sgm_P1, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, "R")
     # for two vertical directions, P1 should be further devided by sgm_V
     # up
-    print "{}: up".format(datetime.now())
+    print("{}: up".format(datetime.now()))
     r = (-1, 0)
     right_cost_volume_up = semi_global_matching(left_image, right_image, right_cost_volume, r, sgm_P1/sgm_V, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, "R")
     # bottom
-    print "{}: bottom".format(datetime.now())
+    print("{}: bottom".format(datetime.now()))
     r = (1, 0)
     right_cost_volume_bottom = semi_global_matching(left_image, right_image, right_cost_volume, r, sgm_P1/sgm_V, sgm_P2, sgm_Q1, sgm_Q2, sgm_D, "R")
     # taken average
     right_cost_volume = (right_cost_volume_right + right_cost_volume_left + right_cost_volume_up + right_cost_volume_bottom) / 4.
-    print "{}: semi-global matching done...".format(datetime.now())
+    print("{}: semi-global matching done...".format(datetime.now()))
 
     return left_cost_volume, right_cost_volume
 
@@ -238,7 +238,7 @@ def SGM_average(left_cost_volume, right_cost_volume, left_image, right_image, \
 # simple "Winner-take-All"
 def disparity_prediction(left_cost_volume, right_cost_volume):
 
-    print "{}: left disparity map making...".format(datetime.now())
+    print("{}: left disparity map making...".format(datetime.now()))
     ndisp, height, width = left_cost_volume.shape
     left_disparity_map = np.ndarray([height, width], dtype=np.float32)
 
@@ -254,7 +254,7 @@ def disparity_prediction(left_cost_volume, right_cost_volume):
             left_disparity_map[h, w] = min_disparity
 
     # same for right 
-    print "{}: right disparity map making...".format(datetime.now())
+    print("{}: right disparity map making...".format(datetime.now()))
     right_disparity_map = np.ndarray([height, width], dtype=np.float32)
 
     for h in range(height):
@@ -267,7 +267,7 @@ def disparity_prediction(left_cost_volume, right_cost_volume):
                     min_disparity = d
             assert min_disparity >= 0
             right_disparity_map[h, w] = min_disparity
-    print "{}: disparity map done...".format(datetime.now())
+    print("{}: disparity map done...".format(datetime.now()))
 
     return left_disparity_map, right_disparity_map
 
@@ -278,7 +278,7 @@ def disparity_prediction(left_cost_volume, right_cost_volume):
 # 2: occlusion
 def interpolation(left_disparity_map, right_disparity_map, ndisp):
 
-    print "{}: doing left-right consistency check...".format(datetime.now())
+    print("{}: doing left-right consistency check...".format(datetime.now()))
     height, width = left_disparity_map.shape
     consistency_map = np.zeros([height, width], dtype=np.int32)
 
@@ -306,7 +306,7 @@ def interpolation(left_disparity_map, right_disparity_map, ndisp):
             if consistency_map[h, w] == 0:
                 consistency_map[h, w] = 2
      
-    print "{}: doing interpolation...".format(datetime.now())
+    print("{}: doing interpolation...".format(datetime.now()))
     int_left_disparity_map = np.ndarray([height, width], dtype=np.float32)
 
     for h in range(height):
@@ -373,14 +373,14 @@ def interpolation(left_disparity_map, right_disparity_map, ndisp):
                     int_left_disparity_map[h, w] = left_disparity_map[h, w]
 
     left_disparity_map = int_left_disparity_map
-    print "{}: interpolation done...".format(datetime.now())
+    print("{}: interpolation done...".format(datetime.now()))
 
     return left_disparity_map
 
 # subpixel enhancement
 def subpixel_enhance(left_disparity_map, left_cost_volume):
 
-    print "{}: doing subpixel enhancement...".format(datetime.now())
+    print("{}: doing subpixel enhancement...".format(datetime.now()))
     ndisp, height, width = left_cost_volume.shape
     se_left_disparity_map = np.ndarray([height, width], dtype=np.float32)
 
@@ -395,14 +395,14 @@ def subpixel_enhance(left_disparity_map, left_cost_volume):
                 C = left_cost_volume[int(d), h, w]
                 se_left_disparity_map[h, w] = d - (C_p - C_m) / (2. * (C_p - 2. * C + C_m))
 
-    print "{}: subpixel enhancement done...".format(datetime.now())
+    print("{}: subpixel enhancement done...".format(datetime.now()))
     
     return se_left_disparity_map
 
 # refinement1: median filter
 def median_filter(left_disparity_map, filter_height, filter_width):
 
-    print "{}: doing median filter...".format(datetime.now())
+    print("{}: doing median filter...".format(datetime.now()))
     height, width = left_disparity_map.shape
     med_left_disparity_map = np.ndarray([height, width], dtype=np.float32)
 
@@ -416,14 +416,14 @@ def median_filter(left_disparity_map, filter_height, filter_width):
             median = np.median(patch)
             med_left_disparity_map[h, w] = median
 
-    print "{}: median filtering done...".format(datetime.now())
+    print("{}: median filtering done...".format(datetime.now()))
 
     return med_left_disparity_map
 
 # refinement2: bilateral filter
 def bilateral_filter(left_image, left_disparity_map, filter_height, filter_width, mean, std_dev, blur_threshold):
 
-    print "{}: doing bilateral filter...".format(datetime.now())
+    print("{}: doing bilateral filter...".format(datetime.now()))
     height, width = left_disparity_map.shape
     g = util.normal(mean, std_dev)
 
@@ -465,7 +465,7 @@ def bilateral_filter(left_image, left_disparity_map, filter_height, filter_width
             final_patch = np.multiply(final_filter, patch)
             bi_left_disparity_map[h, w] = np.sum(final_patch) / Wsum
 
-    print "{}: bilateral filtering done...".format(datetime.now())
+    print("{}: bilateral filtering done...".format(datetime.now()))
 
     return bi_left_disparity_map
 

@@ -4,18 +4,18 @@ import numpy as np
 import cv2
 
 def readPfm(filename):
-    f = open(filename, 'r')
+    f = open(filename, 'rb')
     line = f.readline()
-    assert line.strip() == "Pf" # one sample per pixel
+    assert line.strip() == b"Pf" # one sample per pixel
     line = f.readline()
     items = line.strip().split()
     width = int(items[0])
     height = int(items[1])
     line = f.readline()
     if float(line.strip()) < 0:  # little-endian
-        fmt = "<f"
+        fmt = b"<f"
     else:
-        fmt = ">f"
+        fmt = b">f"
     maps = np.ndarray([height, width], dtype=np.float32)
     for h in range(height-1, -1, -1):
         for w in range(width):

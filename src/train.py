@@ -96,7 +96,7 @@ def main():
     with tf.name_scope("train"):
         var_list = tf.trainable_variables()
         for var in var_list:
-            print "{}: {}".format(var.name, var.shape)
+            print("{}: {}".format(var.name, var.shape))
         # Get gradients of all trainable variables
         gradients = tf.gradients(loss, var_list)
         gradients = list(zip(gradients, var_list))
@@ -146,17 +146,17 @@ def main():
         else:
             saver.restore(sess, args.resume)
 
-        print "training_batches_per_epoch: {}, val_batches_per_epoch: {}.".format(\
-                train_batches_per_epoch, val_batches_per_epoch)
-        print("{} Start training...".format(datetime.now()))
-        print("{} Open Tensorboard at --logdir {}".format(datetime.now(), 
-                                                        filewriter_path))
+        print("training_batches_per_epoch: {}, val_batches_per_epoch: {}.".format(\
+                train_batches_per_epoch, val_batches_per_epoch))
+        print(("{} Start training...".format(datetime.now())))
+        print(("{} Open Tensorboard at --logdir {}".format(datetime.now(), 
+                                                        filewriter_path)))
       
         # Loop training
         for epoch in range(args.start_epoch, args.end_epoch):
-            print("{} Epoch number: {}".format(datetime.now(), epoch+1))
+            print(("{} Epoch number: {}".format(datetime.now(), epoch+1)))
 
-            for batch in tqdm(range(train_batches_per_epoch)):
+            for batch in tqdm(list(range(train_batches_per_epoch))):
                 # Get a batch of data
                 batch_left, batch_right_pos, batch_right_neg = train_generator.next_batch(batch_size)
                 
@@ -174,16 +174,16 @@ def main():
 
                 
             if (epoch+1) % args.save_freq == 0:
-                print("{} Saving checkpoint of model...".format(datetime.now()))  
+                print(("{} Saving checkpoint of model...".format(datetime.now())))  
                 # save checkpoint of the model
                 checkpoint_name = os.path.join(checkpoint_path, 'model_epoch'+str(epoch+1)+'.ckpt')
                 save_path = saver.save(sess, checkpoint_name)  
 
             if (epoch+1) % args.val_freq == 0:
                 # Validate the model on the entire validation set
-                print("{} Start validation".format(datetime.now()))
+                print(("{} Start validation".format(datetime.now())))
                 val_ls = 0.
-                for _ in tqdm(range(val_batches_per_epoch)):
+                for _ in tqdm(list(range(val_batches_per_epoch))):
                     batch_left, batch_right_pos, batch_right_neg = val_generator.next_batch(batch_size)
                     result = sess.run(loss, feed_dict={leftx: batch_left,
                                                          rightx_pos: batch_right_pos,
@@ -192,7 +192,7 @@ def main():
 
                 val_ls = val_ls / (1. * val_batches_per_epoch)
                 
-                print 'validation loss: {}'.format(val_ls)
+                print('validation loss: {}'.format(val_ls))
                 s = sess.run(val_merged_summary, feed_dict={val_loss: np.float32(val_ls)})
                 writer.add_summary(s, train_batches_per_epoch*(epoch + 1))
 

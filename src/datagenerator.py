@@ -68,7 +68,7 @@ class ImageDataGenerator:
             
             # store total number of data
             self.data_size = len(self.left_paths)
-            print "total image num in file {} is {}".format(image_list, self.data_size)
+            print("total image num in file {} is {}".format(image_list, self.data_size))
 
     def prefetch(self):
         """
@@ -94,7 +94,7 @@ class ImageDataGenerator:
             self.right_images.append(right_image)
             self.gt_images.append(readPfm(self.gt_paths[_]))
 
-        print "prefetch done"
+        print("prefetch done")
 
     def shuffle_data(self):
         """
@@ -176,8 +176,8 @@ class ImageDataGenerator:
         auged_right_image = np.zeros([height+self.patch_size[0]-1, width+self.patch_size[1]-1, 1], dtype=np.float32)
 
         # NOTE: patch size should always be odd
-        rows_auged = (self.patch_size[0] - 1)/2
-        cols_auged = (self.patch_size[1] - 1)/2
+        rows_auged = (self.patch_size[0] - 1)//2
+        cols_auged = (self.patch_size[1] - 1)//2
         auged_left_image[rows_auged: rows_auged+height, cols_auged: cols_auged+width, 0] = left_image
         auged_right_image[rows_auged: rows_auged+height, cols_auged: cols_auged+width, 0] = right_image
 
@@ -243,7 +243,7 @@ class ImageDataGenerator:
 if __name__ == "__main__" :
     dg = ImageDataGenerator("/scratch/xz/MC-CNN-python/data/list/train.txt")
     patches_left, patches_right_pos, patches_right_neg = dg.next_batch(128)
-    print patches_left.shape
-    print patches_right_pos.shape
-    print patches_right_neg.shape
+    print(patches_left.shape)
+    print(patches_right_pos.shape)
+    print(patches_right_neg.shape)
 

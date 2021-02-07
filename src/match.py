@@ -81,10 +81,10 @@ def main():
     ####################
     # do matching
     for left_path in tqdm(img_paths):
-        print "index: ".format(index)
+        print("index: ".format(index))
         if index < start:
             index += 1
-            print "passed"
+            print("passed")
             continue
         if index > end:
             break
@@ -110,9 +110,9 @@ def main():
         out_img_path = os.path.join(img_dir, out_img_file)
 
         height, width, ndisp = util.parseCalib(calib_path)
-        print "left_image: {}\nright_image: {}".format(left_path, right_path)
-        print "height: {}, width: {}, ndisp: {}".format(height, width, ndisp)
-        print "out_path: {}\nout_time_path: {}\nout_img_path: {}".format(out_path, out_time_path, out_img_path)
+        print("left_image: {}\nright_image: {}".format(left_path, right_path))
+        print("height: {}, width: {}, ndisp: {}".format(height, width, ndisp))
+        print("out_path: {}\nout_time_path: {}\nout_img_path: {}".format(out_path, out_time_path, out_img_path))
         
         # reading images
         left_image = cv2.imread(left_path, cv2.IMREAD_GRAYSCALE).astype(np.float32)
@@ -123,49 +123,49 @@ def main():
         right_image = np.expand_dims(right_image, axis=2)
         assert left_image.shape == (height, width, 1)
         assert right_image.shape == (height, width, 1)
-        print "{}: images read".format(datetime.now())
+        print("{}: images read".format(datetime.now()))
 
         # start timer for time file
         stTime = time.time()
 
         # compute features
         left_feature, right_feature = compute_features(left_image, right_image, patch_height, patch_width, args.resume)
-        print left_feature.shape
-        print "{}: features computed".format(datetime.now())
+        print(left_feature.shape)
+        print("{}: features computed".format(datetime.now()))
 
         # form cost-volume
         left_cost_volume, right_cost_volume = compute_cost_volume(left_feature, right_feature, ndisp)
-        print "{}: cost-volume computed".format(datetime.now())
+        print("{}: cost-volume computed".format(datetime.now()))
 
         # cost-volume aggregation
-        print "{}: begin cost-volume aggregation. This could take long".format(datetime.now())
+        print("{}: begin cost-volume aggregation. This could take long".format(datetime.now()))
         left_cost_volume, right_cost_volume = cost_volume_aggregation(left_image, right_image,left_cost_volume,right_cost_volume,\
                                                                args.cbca_intensity, args.cbca_distance, args.cbca_num_iterations1) 
-        print "{}: cost-volume aggregated".format(datetime.now())
+        print("{}: cost-volume aggregated".format(datetime.now()))
 
         # semi-global matching
-        print "{}: begin semi-global matching. This could take long".format(datetime.now())
+        print("{}: begin semi-global matching. This could take long".format(datetime.now()))
         left_cost_volume, right_cost_volume = SGM_average(left_cost_volume, right_cost_volume, left_image, right_image, \
                                                      args.sgm_P1, args.sgm_P2, args.sgm_Q1, args.sgm_Q2, args.sgm_D, args.sgm_V)
-        print "{}: semi-global matched".format(datetime.now())
+        print("{}: semi-global matched".format(datetime.now()))
 
         # cost-volume aggregation afterhand
-        print "{}: begin cost-volume aggregation. This could take long".format(datetime.now())
+        print("{}: begin cost-volume aggregation. This could take long".format(datetime.now()))
         left_cost_volume, right_cost_volume = cost_volume_aggregation(left_image, right_image,left_cost_volume,right_cost_volume,\
                                                                args.cbca_intensity, args.cbca_distance, args.cbca_num_iterations2) 
-        print "{}: cost-volume aggregated".format(datetime.now())
+        print("{}: cost-volume aggregated".format(datetime.now()))
 
         # disparity map making 
         left_disparity_map, right_disparity_map = disparity_prediction(left_cost_volume, right_cost_volume)
-        print "{}: disparity predicted".format(datetime.now())
+        print("{}: disparity predicted".format(datetime.now()))
 
         # interpolation
         left_disparity_map = interpolation(left_disparity_map, right_disparity_map, ndisp)
-        print "{}: disparity interpolated".format(datetime.now())
+        print("{}: disparity interpolated".format(datetime.now()))
 
         # subpixel enhancement
         left_disparity_map = subpixel_enhance(left_disparity_map, left_cost_volume)
-        print "{}: subpixel enhanced".format(datetime.now())
+        print("{}: subpixel enhanced".format(datetime.now()))
 
         # refinement
         # 5*5 median filter 
@@ -173,7 +173,7 @@ def main():
 
         # bilateral filter
         left_disparity_map = bilateral_filter(left_image, left_disparity_map, 5, 5, 0, args.blur_sigma, args.blur_threshold)
-        print "{}: refined".format(datetime.now())
+        print("{}: refined".format(datetime.now()))
 
         # end timer
         endTime = time.time()
@@ -182,7 +182,7 @@ def main():
         util.saveDisparity(left_disparity_map, out_img_path)
         util.writePfm(left_disparity_map, out_path)
         util.saveTimeFile(endTime-stTime, out_time_path)
-        print "{}: saved".format(datetime.now())
+        print("{}: saved".format(datetime.now()))
 
 if __name__ == "__main__":
     main()

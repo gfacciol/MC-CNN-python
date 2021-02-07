@@ -49,20 +49,20 @@ class NET(object):
         # in the origin MC-CNN, there's no detail about this(maybe I ignored it), but I strongly recommend using "VALID"
 
         self.conv1 = conv(self.X, k, k, ic, nf, 1, 1, padding = "VALID", non_linear = "RELU", name = 'conv1')
-        print "conv1: {}".format(self.conv1.shape)
+        print("conv1: {}".format(self.conv1.shape))
 
         for _ in range(2, nl):
             setattr(self, "conv{}".format(_), conv(getattr(self, "conv{}".format(_-1)), k, k, nf, nf, 1, 1, \
                     padding = "VALID", non_linear = "RELU", name = 'conv{}'.format(_)))
-            print "conv{}: {}".format(_, getattr(self, "conv{}".format(_)).shape)
+            print("conv{}: {}".format(_, getattr(self, "conv{}".format(_)).shape))
 
         # last conv without RELU
         setattr(self, "conv{}".format(nl), conv(getattr(self, "conv{}".format(nl-1)), k, k, nf, nf, 1, 1, \
                 padding = "VALID", non_linear = "NONE", name = 'conv{}'.format(nl)))
-        print "conv{}: {}".format(nl, getattr(self, "conv{}".format(nl)).shape)
+        print("conv{}: {}".format(nl, getattr(self, "conv{}".format(nl)).shape))
 
         self.features = tf.nn.l2_normalize(getattr(self, "conv{}".format(nl)), dim=-1, name = "normalize")
-        print "features: {}".format(self.features.shape)
+        print("features: {}".format(self.features.shape))
 
     def load_initial_weights(self, session):
 
@@ -71,7 +71,7 @@ class NET(object):
         weights_dict = np.load(self.WEIGHTS_PATH, encoding = 'bytes').item()
 
         for name in weights_dict:
-            print "restoring var {}...".format(name)
+            print("restoring var {}...".format(name))
             var = [var for var in all_vars if var.name == name][0]
             session.run(var.assign(weights_dict[name]))
      
@@ -82,7 +82,7 @@ class NET(object):
         for var in save_vars:
             weights_dict[var.name] = session.run(var)
         np.save('pretrain.npy', weights_dict) 
-        print "weights saved in file {}".format(file_name)
+        print("weights saved in file {}".format(file_name))
   
 """
 Predefine all necessary layers
