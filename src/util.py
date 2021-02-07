@@ -55,10 +55,10 @@ def writePfm(disparity_map, filename):
     assert len(disparity_map.shape) == 2
     height, width = disparity_map.shape
     disparity_map = disparity_map.astype(np.float32)
-    o = open(filename, "w")
+    o = open(filename, "wb")
     # header
     o.write(b"Pf\n")
-    o.write(b"{} {}\n".format(width, height))
+    o.write(b"%d %d\n"%(width, height))
     o.write(b"-1.0\n")
     # raster
     # NOTE: bottom up
