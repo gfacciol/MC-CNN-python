@@ -57,13 +57,13 @@ def writePfm(disparity_map, filename):
     disparity_map = disparity_map.astype(np.float32)
     o = open(filename, "w")
     # header
-    o.write("Pf\n")
-    o.write("{} {}\n".format(width, height))
-    o.write("-1.0\n")
+    o.write(b"Pf\n")
+    o.write(b"{} {}\n".format(width, height))
+    o.write(b"-1.0\n")
     # raster
     # NOTE: bottom up
     # little-endian
-    fmt = "<f"
+    fmt = b"<f"
     for h in range(height-1, -1, -1):
         for w in range(width):
             o.write(struct.pack(fmt, disparity_map[h, w]))
