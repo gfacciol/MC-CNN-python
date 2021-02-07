@@ -408,10 +408,10 @@ def median_filter(left_disparity_map, filter_height, filter_width):
 
     for h in range(height):
         for w in range(width):
-            patch_hs = max(0, h - (filter_height-1)/2)
-            patch_he = min(height, h + (filter_height-1)/2 + 1)
-            patch_ws = max(0, w - (filter_width-1)/2)
-            patch_we = min(width, w + (filter_width-1)/2 + 1)
+            patch_hs = max(0, h - (filter_height-1)//2)
+            patch_he = min(height, h + (filter_height-1)//2 + 1)
+            patch_ws = max(0, w - (filter_width-1)//2)
+            patch_we = min(width, w + (filter_width-1)//2 + 1)
             patch = left_disparity_map[patch_hs:patch_he, patch_ws:patch_we]
             median = np.median(patch)
             med_left_disparity_map[h, w] = median
