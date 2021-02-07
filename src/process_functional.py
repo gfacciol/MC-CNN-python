@@ -428,8 +428,8 @@ def bilateral_filter(left_image, left_disparity_map, filter_height, filter_width
     g = util.normal(mean, std_dev)
 
     # precompute filter weight
-    center_h = (filter_height - 1)/2
-    center_w = (filter_width - 1)/2
+    center_h = (filter_height - 1)//2
+    center_w = (filter_width - 1)//2
     bi_filter = np.zeros([filter_height, filter_width], dtype=np.float32)
     for h in range(filter_height):
         for w in range(filter_width):
